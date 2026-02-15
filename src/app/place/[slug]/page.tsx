@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlaceActions } from "./PlaceActions";
 
 type Place = {
   slug: string;
@@ -53,7 +54,7 @@ const PLACES: Place[] = [
     nearbyGastro: [],
   },
 
-  // pár placeholderů, aby homepage linky nepadaly na 404
+  // placeholdery, aby homepage linky nepadaly na 404
   { slug: "quest-60-90", title: "Quest na 60–90 min", category: "quest", tags: ["rodina"], durationMin: 90, alternatives: [], nearbyGastro: [] },
   { slug: "zviratka-a-hriste", title: "Za zvířátky + hřiště", category: "zvířata", tags: ["rodina"], durationMin: 120, alternatives: [], nearbyGastro: [] },
   { slug: "alternativa-k-magnetu", title: "Alternativa k magnetu", category: "tip", tags: ["klid"], durationMin: 120, alternatives: ["ticha-vyhlidka"], nearbyGastro: [] },
@@ -109,11 +110,22 @@ export default async function PlacePage({ params }: { params: Promise<{ slug: st
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
         {place.tags.map((t) => (
-          <span key={t} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 999, background: "rgba(0,0,0,.06)" }}>
+          <span
+            key={t}
+            style={{
+              fontSize: 12,
+              padding: "4px 10px",
+              borderRadius: 999,
+              background: "rgba(0,0,0,.06)",
+            }}
+          >
             {t}
           </span>
         ))}
       </div>
+
+      {/* AKCE (client) */}
+      <PlaceActions slug={place.slug} />
 
       <section style={{ marginTop: 18, padding: 14, border: "1px solid rgba(0,0,0,.12)", borderRadius: 12 }}>
         <h2 style={{ marginTop: 0, fontSize: 16 }}>Podobné bez davů</h2>

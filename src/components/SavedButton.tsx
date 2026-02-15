@@ -1,7 +1,6 @@
 "use client";
 
 import { useSaved } from "@/lib/useSaved";
-import { SavedButton } from "@/components/SavedButton";
 
 export function SavedButton({
   slug,
@@ -22,16 +21,12 @@ export function SavedButton({
 
   const style: React.CSSProperties =
     variant === "primary"
-      ? {
-          ...base,
-          background: active ? "rgba(0,0,0,.08)" : "rgba(0,0,0,.04)",
-        }
-      : {
-          ...base,
-          background: active ? "rgba(0,0,0,.06)" : "transparent",
-        };
+      ? { ...base, background: active ? "rgba(0,0,0,.08)" : "rgba(0,0,0,.04)" }
+      : { ...base, background: active ? "rgba(0,0,0,.06)" : "transparent" };
 
   return (
-    <SavedButton slug={t.slug} />
+    <button onClick={() => toggle(slug)} style={style}>
+      {active ? "Uloženo" : "Uložit"}
+    </button>
   );
 }

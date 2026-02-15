@@ -190,9 +190,10 @@ export default function Home() {
             Profil: <b>{LABEL[profile]}</b>
           </p>
         </div>
-        <a href="#" style={{ opacity: 0.8 }}>
-          Uložené
-        </a>
+        <nav style={{ display: "flex", gap: 10 }}>
+  <Link href="/nearby" style={{ opacity: 0.85 }}>Kolem mě</Link>
+  <Link href="/saved" style={{ opacity: 0.85 }}>Uložené</Link>
+</nav>
       </header>
 
       <section style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
