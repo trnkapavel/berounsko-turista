@@ -1,12 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { PLACES, Place } from "@/data/places";
+import { useEffect, useMemo, useState } from "react";
+import { PLACES, Place, Profile } from "@/data/places";
 import { SavedButton } from "@/components/SavedButton";
+import { PlanButton } from "@/components/PlanButton";
 
 function includesText(hay: string, needle: string) {
   return hay.toLowerCase().includes(needle.toLowerCase().trim());
+}
+
+function readProfile(): Profile {
+  try {
+    const raw = localStorage.getItem("bt_profile");
+    if (raw === "rodina" || raw === "par" || raw === "cyklo" || raw === "hiking" || raw === "en") return raw;
+  } catch {}
+  return "rodina";
+}
+
+function readPreferQuiet(): boolean {
+  try {
+    return localStorage.getItem("bt_quiet") === "1";
+  } catch {
+    return true;
+  }
+}
+
+function scorePlace(p: Place, profile: Profile, preferQuiet: boolean) {
+  let score = 0;
+
+  // profil match
+  const fit = p.profileFit ?? [];
+  if (fit.includes(profile)) score -= 30;
+  else if ((p.tags ?? []).includes(profile)) score -= 15;
+
+  // klid preference
+  if (preferQuiet) {
+    if ((p.tags ?? []).includes("klid") || p.crowd === "quiet") score -= 10;
+    if (p.crowd === "magnet") score += 20;
+  }
+
+  // magnety obecně lehce dolů (i bez preferQuiet)
+  if (p.crowd === "magnet") score += 10;
+
+  // drobný bonus pro indoor, když je to explicitní tag (uživatelsky často žádoucí)
+  if ((p.tags ?? []).includes("indoor")) score -= 1;
+
+  return score;
 }
 
 export default function NearbyPage() {
@@ -14,7 +54,14 @@ export default function NearbyPage() {
   const [category, setCategory] = useState<string>("all");
   const [preferQuiet, setPreferQuiet] = useState(true);
   const [onlyIndoor, setOnlyIndoor] = useState(false);
-  const [maxDuration, setMaxDuration] = useState<number>(0); // 0 = libovolně
+  const [avoidMagnets, setAvoidMagnets] = useState(false);
+  const [maxDuration, setMaxDuration] = useState<number>(0);
+  const [profile, setProfile] = useState<Profile>("rodina");
+
+  useEffect(() => {
+    setProfile(readProfile());
+    setPreferQuiet(readPreferQuiet());
+  }, []);
 
   const categories = useMemo(() => {
     const uniq = Array.from(new Set(PLACES.map((p) => p.category))).filter(Boolean);
@@ -25,7 +72,12 @@ export default function NearbyPage() {
     let list: Place[] = [...PLACES];
 
     if (q.trim()) {
-      list = list.filter((p) => includesText(p.title, q) || (p.tags ?? []).some((t) => includesText(t, q)));
+      list = list.filter(
+        (p) =>
+          includesText(p.title, q) ||
+          (p.why ? includesText(p.why, q) : false) ||
+          (p.tags ?? []).some((t) => includesText(t, q))
+      );
     }
 
     if (category !== "all") {
@@ -33,24 +85,22 @@ export default function NearbyPage() {
     }
 
     if (onlyIndoor) {
-      list = list.filter((p) => (p.tags ?? []).includes("indoor"));
+      list = list.filter((p) => (p.tags ?? []).includes("indoor") || p.category === "indoor");
+    }
+
+    if (avoidMagnets) {
+      list = list.filter((p) => p.crowd !== "magnet");
     }
 
     if (maxDuration > 0) {
       list = list.filter((p) => (p.durationMin ?? 9999) <= maxDuration);
     }
 
-    if (preferQuiet) {
-      // posuň dopředu věci, které mají tag "klid"
-      list = list.sort((a, b) => {
-        const ak = (a.tags ?? []).includes("klid") ? 0 : 1;
-        const bk = (b.tags ?? []).includes("klid") ? 0 : 1;
-        return ak - bk;
-      });
-    }
+    // řazení podle skóre (nižší = lepší)
+    list.sort((a, b) => scorePlace(a, profile, preferQuiet) - scorePlace(b, profile, preferQuiet));
 
     return list;
-  }, [q, category, preferQuiet, onlyIndoor, maxDuration]);
+  }, [q, category, preferQuiet, onlyIndoor, avoidMagnets, maxDuration, profile]);
 
   return (
     <main style={{ maxWidth: 920, margin: "0 auto", padding: 24 }}>
@@ -58,12 +108,12 @@ export default function NearbyPage() {
         <div>
           <h1 style={{ fontSize: 28, margin: 0 }}>Kolem mě</h1>
           <p style={{ opacity: 0.75, marginTop: 6 }}>
-            MVP list a filtry (GPS přidáme později)
+            Profil: <b>{profile}</b>
           </p>
         </div>
         <nav style={{ display: "flex", gap: 10 }}>
-          <Link href="/plan" style={{ opacity: 0.85 }}>Plán dne</Link>
           <Link href="/" style={{ opacity: 0.85 }}>Dnes se hodí</Link>
+          <Link href="/plan" style={{ opacity: 0.85 }}>Plán dne</Link>
           <Link href="/saved" style={{ opacity: 0.85 }}>Uložené</Link>
         </nav>
       </header>
@@ -127,6 +177,11 @@ export default function NearbyPage() {
           </label>
 
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input type="checkbox" checked={avoidMagnets} onChange={(e) => setAvoidMagnets(e.target.checked)} />
+            Vyhnout se magnetům
+          </label>
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input type="checkbox" checked={onlyIndoor} onChange={(e) => setOnlyIndoor(e.target.checked)} />
             Jen indoor
           </label>
@@ -149,9 +204,17 @@ export default function NearbyPage() {
               <span style={{ opacity: 0.7 }}>{p.durationMin ? `${p.durationMin} min` : ""}</span>
             </div>
 
-            <p style={{ marginTop: 6, marginBottom: 10, opacity: 0.8 }}>
-              {p.category} {p.openNote ? `• ${p.openNote}` : ""}
+            <p style={{ marginTop: 6, marginBottom: 6, opacity: 0.8 }}>
+              {p.category}
+              {p.crowd ? ` • ${p.crowd === "magnet" ? "Magnet" : p.crowd === "quiet" ? "Klid" : "Normál"}` : ""}
+              {p.openNote ? ` • ${p.openNote}` : ""}
             </p>
+
+            {p.why ? (
+              <p style={{ marginTop: 0, marginBottom: 10, opacity: 0.9 }}>
+                {p.why}
+              </p>
+            ) : null}
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {(p.tags ?? []).map((tag) => (
@@ -161,7 +224,7 @@ export default function NearbyPage() {
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
               <Link
                 href={`/place/${p.slug}`}
                 style={{
@@ -176,6 +239,7 @@ export default function NearbyPage() {
                 Detail
               </Link>
 
+              <PlanButton slug={p.slug} />
               <SavedButton slug={p.slug} />
             </div>
           </article>
