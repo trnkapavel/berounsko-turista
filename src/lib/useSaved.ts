@@ -25,6 +25,12 @@ export function useSaved() {
 
   useEffect(() => {
     setSaved(readSaved());
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === KEY) setSaved(readSaved());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const isSaved = useCallback((slug: string) => saved.includes(slug), [saved]);
@@ -38,5 +44,10 @@ export function useSaved() {
     });
   }, []);
 
-  return { saved, isSaved, toggle };
+  const clear = useCallback(() => {
+    setSaved([]);
+    writeSaved([]);
+  }, []);
+
+  return { saved, isSaved, toggle, clear };
 }
