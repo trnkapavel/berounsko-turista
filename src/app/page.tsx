@@ -1,65 +1,78 @@
-import Image from "next/image";
+type Profile = "rodina" | "par" | "cyklo" | "hiking" | "en";
+
+const TIPS: Record<Profile, { title: string; tags: string[]; desc: string; eta: string }[]> = {
+  rodina: [
+    { title: "Quest na 60–90 min", tags: ["děti", "hravé", "krátké"], desc: "Hledačka, která udrží tempo a pozornost.", eta: "do 20 min" },
+    { title: "Za zvířátky + hřiště", tags: ["rodina", "outdoor", "pohoda"], desc: "Bez stresu, jasný cíl a pauzy.", eta: "do 30 min" },
+  ],
+  par: [
+    { title: "Klidná vyhlídka", tags: ["klid", "výhled", "půlden"], desc: "Míň lidí, víc atmosféry.", eta: "do 35 min" },
+    { title: "Káva + kultura", tags: ["indoor", "kavárna", "galerie"], desc: "Když chcete plán bez náhody.", eta: "v okolí" },
+  ],
+  cyklo: [
+    { title: "Okruh na kole", tags: ["kolo", "střední", "výhled"], desc: "Plynulá trasa s jedním silným highlightem.", eta: "start poblíž" },
+    { title: "Naučná stezka po cestě", tags: ["kolo", "lehké", "zastávky"], desc: "Ideální jako doplněk k delší trase.", eta: "do 15 min" },
+  ],
+  hiking: [
+    { title: "Půldenní hřebenovka", tags: ["hiking", "klid", "příroda"], desc: "Trasa, kde si člověk srovná myšlenky.", eta: "do 40 min" },
+    { title: "Tiché místo mimo magnety", tags: ["méně známé", "klid", "les"], desc: "Alternativa k přetíženým ikonám.", eta: "do 25 min" },
+  ],
+  en: [
+    { title: "Easy walk with a viewpoint", tags: ["easy", "view", "half-day"], desc: "Simple plan, low friction.", eta: "up to 35 min" },
+    { title: "Rainy day indoor pick", tags: ["indoor", "museum", "cafe"], desc: "Good even when weather turns.", eta: "nearby" },
+  ],
+};
 
 export default function Home() {
+  const profile: Profile = "rodina"; // zatím natvrdo, příště uděláme přepínač + localStorage
+  const tips = TIPS[profile];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main style={{ maxWidth: 920, margin: "0 auto", padding: 24 }}>
+      <header style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+        <div>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Dnes se hodí</h1>
+          <p style={{ opacity: 0.75, marginTop: 6 }}>
+            Profil: <b>{profile}</b> • MVP bez databáze (zatím)
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <a href="#" style={{ opacity: 0.8 }}>Uložené</a>
+      </header>
+
+      <section style={{ marginTop: 18, padding: 12, border: "1px solid rgba(0,0,0,.12)", borderRadius: 12 }}>
+        <p style={{ margin: 0, opacity: 0.8 }}>
+          Cíl: odlehčit přetíženým místům tím, že vždy nabídneme kvalitní alternativu “stejný zážitek, méně lidí”.
+        </p>
+      </section>
+
+      <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
+        {tips.map((t) => (
+          <article key={t.title} style={{ border: "1px solid rgba(0,0,0,.12)", borderRadius: 12, padding: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <h2 style={{ fontSize: 18, margin: 0 }}>{t.title}</h2>
+              <span style={{ opacity: 0.7 }}>{t.eta}</span>
+            </div>
+            <p style={{ marginTop: 8, marginBottom: 10, opacity: 0.9 }}>{t.desc}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {t.tags.map((tag) => (
+                <span key={tag} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 999, background: "rgba(0,0,0,.06)" }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+              <button style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,0,0,.18)" }}>Detail</button>
+              <button style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,0,0,.18)" }}>Start</button>
+              <button style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,0,0,.18)" }}>Uložit</button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <footer style={{ marginTop: 24, opacity: 0.6, fontSize: 12 }}>
+        Další krok: profil přepínač + “Kolem mě” + detail místa s alternativami.
+      </footer>
+    </main>
   );
 }
