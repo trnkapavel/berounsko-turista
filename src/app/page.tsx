@@ -191,6 +191,7 @@ export default function Home() {
           </p>
         </div>
         <nav style={{ display: "flex", gap: 10 }}>
+  <Link href="/plan" style={{ opacity: 0.85 }}>Plán dne</Link>
   <Link href="/nearby" style={{ opacity: 0.85 }}>Kolem mě</Link>
   <Link href="/saved" style={{ opacity: 0.85 }}>Uložené</Link>
 </nav>

@@ -62,6 +62,7 @@ export default function NearbyPage() {
           </p>
         </div>
         <nav style={{ display: "flex", gap: 10 }}>
+          <Link href="/plan" style={{ opacity: 0.85 }}>Plán dne</Link>
           <Link href="/" style={{ opacity: 0.85 }}>Dnes se hodí</Link>
           <Link href="/saved" style={{ opacity: 0.85 }}>Uložené</Link>
         </nav>
