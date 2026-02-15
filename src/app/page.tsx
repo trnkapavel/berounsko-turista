@@ -1,8 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type Profile = "rodina" | "par" | "cyklo" | "hiking" | "en";
+
+type Tip = {
+  slug: string;
+  title: string;
+  tags: string[];
+  desc: string;
+  eta: string;
+  kind: "klid" | "popular" | "indoor" | "family";
+};
 
 const LABEL: Record<Profile, string> = {
   rodina: "Rodina",
@@ -12,34 +22,136 @@ const LABEL: Record<Profile, string> = {
   en: "EN",
 };
 
-const TIPS: Record<
-  Profile,
-  { title: string; tags: string[]; desc: string; eta: string; kind: "klid" | "popular" | "indoor" | "family" }[]
-> = {
+const TIPS: Record<Profile, Tip[]> = {
   rodina: [
-    { title: "Quest na 60–90 min", tags: ["děti", "hravé", "krátké"], desc: "Hledačka, která udrží tempo a pozornost.", eta: "do 20 min", kind: "family" },
-    { title: "Za zvířátky + hřiště", tags: ["rodina", "outdoor", "pohoda"], desc: "Bez stresu, jasný cíl a pauzy.", eta: "do 30 min", kind: "family" },
-    { title: "Alternativa k magnetu", tags: ["méně lidí", "podobný zážitek"], desc: "Stejný typ výletu, ale klidnější varianta.", eta: "do 25 min", kind: "klid" },
+    {
+      slug: "quest-60-90",
+      title: "Quest na 60–90 min",
+      tags: ["děti", "hravé", "krátké"],
+      desc: "Hledačka, která udrží tempo a pozornost.",
+      eta: "do 20 min",
+      kind: "family",
+    },
+    {
+      slug: "zviratka-a-hriste",
+      title: "Za zvířátky + hřiště",
+      tags: ["rodina", "outdoor", "pohoda"],
+      desc: "Bez stresu, jasný cíl a pauzy.",
+      eta: "do 30 min",
+      kind: "family",
+    },
+    {
+      slug: "alternativa-k-magnetu",
+      title: "Alternativa k magnetu",
+      tags: ["méně lidí", "podobný zážitek"],
+      desc: "Stejný typ výletu, ale klidnější varianta.",
+      eta: "do 25 min",
+      kind: "klid",
+    },
   ],
   par: [
-    { title: "Klidná vyhlídka", tags: ["klid", "výhled", "půlden"], desc: "Míň lidí, víc atmosféry.", eta: "do 35 min", kind: "klid" },
-    { title: "Káva + kultura", tags: ["indoor", "kavárna", "galerie"], desc: "Když chcete plán bez náhody.", eta: "v okolí", kind: "indoor" },
-    { title: "Romantická procházka", tags: ["pohoda", "fotogenické"], desc: "Krátká trasa s dobrým dojezdem na večeři.", eta: "do 20 min", kind: "popular" },
+    {
+      slug: "ticha-vyhlidka",
+      title: "Klidná vyhlídka",
+      tags: ["klid", "výhled", "půlden"],
+      desc: "Míň lidí, víc atmosféry.",
+      eta: "do 35 min",
+      kind: "klid",
+    },
+    {
+      slug: "kava-a-kultura",
+      title: "Káva + kultura",
+      tags: ["indoor", "kavárna", "galerie"],
+      desc: "Když chcete plán bez náhody.",
+      eta: "v okolí",
+      kind: "indoor",
+    },
+    {
+      slug: "romanticka-prochazka",
+      title: "Romantická procházka",
+      tags: ["pohoda", "fotogenické"],
+      desc: "Krátká trasa s dobrým dojezdem na večeři.",
+      eta: "do 20 min",
+      kind: "popular",
+    },
   ],
   cyklo: [
-    { title: "Okruh na kole", tags: ["kolo", "střední", "výhled"], desc: "Plynulá trasa s jedním silným highlightem.", eta: "start poblíž", kind: "popular" },
-    { title: "Naučná stezka po cestě", tags: ["kolo", "lehké", "zastávky"], desc: "Ideální jako doplněk k delší trase.", eta: "do 15 min", kind: "klid" },
-    { title: "Klidnější šotolina", tags: ["klid", "mimo silnice"], desc: "Méně provozu, víc přírody.", eta: "do 25 min", kind: "klid" },
+    {
+      slug: "okruh-na-kole",
+      title: "Okruh na kole",
+      tags: ["kolo", "střední", "výhled"],
+      desc: "Plynulá trasa s jedním silným highlightem.",
+      eta: "start poblíž",
+      kind: "popular",
+    },
+    {
+      slug: "naucna-stezka",
+      title: "Naučná stezka po cestě",
+      tags: ["kolo", "lehké", "zastávky"],
+      desc: "Ideální jako doplněk k delší trase.",
+      eta: "do 15 min",
+      kind: "klid",
+    },
+    {
+      slug: "klidna-sotolina",
+      title: "Klidnější šotolina",
+      tags: ["klid", "mimo silnice"],
+      desc: "Méně provozu, víc přírody.",
+      eta: "do 25 min",
+      kind: "klid",
+    },
   ],
   hiking: [
-    { title: "Půldenní hřebenovka", tags: ["hiking", "klid", "příroda"], desc: "Trasa, kde si člověk srovná myšlenky.", eta: "do 40 min", kind: "klid" },
-    { title: "Tiché místo mimo magnety", tags: ["méně známé", "les"], desc: "Alternativa k přetíženým ikonám.", eta: "do 25 min", kind: "klid" },
-    { title: "Výhledový bod", tags: ["výhled", "outdoor"], desc: "Když chceš jeden silný moment a pak domů.", eta: "do 30 min", kind: "popular" },
+    {
+      slug: "puldenni-hrebenovka",
+      title: "Půldenní hřebenovka",
+      tags: ["hiking", "klid", "příroda"],
+      desc: "Trasa, kde si člověk srovná myšlenky.",
+      eta: "do 40 min",
+      kind: "klid",
+    },
+    {
+      slug: "tiche-misto",
+      title: "Tiché místo mimo magnety",
+      tags: ["méně známé", "les"],
+      desc: "Alternativa k přetíženým ikonám.",
+      eta: "do 25 min",
+      kind: "klid",
+    },
+    {
+      slug: "vyhledovy-bod",
+      title: "Výhledový bod",
+      tags: ["výhled", "outdoor"],
+      desc: "Jeden silný moment a pak domů.",
+      eta: "do 30 min",
+      kind: "popular",
+    },
   ],
   en: [
-    { title: "Easy walk with a viewpoint", tags: ["easy", "view", "half-day"], desc: "Simple plan, low friction.", eta: "up to 35 min", kind: "popular" },
-    { title: "Rainy day indoor pick", tags: ["indoor", "museum", "cafe"], desc: "Good even when weather turns.", eta: "nearby", kind: "indoor" },
-    { title: "Quieter alternative", tags: ["less crowded", "similar vibe"], desc: "Same experience, fewer people.", eta: "up to 25 min", kind: "klid" },
+    {
+      slug: "easy-viewpoint",
+      title: "Easy walk with a viewpoint",
+      tags: ["easy", "view", "half-day"],
+      desc: "Simple plan, low friction.",
+      eta: "up to 35 min",
+      kind: "popular",
+    },
+    {
+      slug: "rainy-day-indoor",
+      title: "Rainy day indoor pick",
+      tags: ["indoor", "museum", "cafe"],
+      desc: "Good even when weather turns.",
+      eta: "nearby",
+      kind: "indoor",
+    },
+    {
+      slug: "quieter-alternative",
+      title: "Quieter alternative",
+      tags: ["less crowded", "similar vibe"],
+      desc: "Same experience, fewer people.",
+      eta: "up to 25 min",
+      kind: "klid",
+    },
   ],
 };
 
@@ -65,7 +177,7 @@ export default function Home() {
   const tips = useMemo(() => {
     const list = [...TIPS[profile]];
     if (!preferQuiet) return list;
-    // jednoduché “rozptylování davů”: preferuj klidné tipy
+    // preferuj klidné tipy (MVP rozptylování davů)
     return list.sort((a, b) => (a.kind === "klid" ? -1 : 1) - (b.kind === "klid" ? -1 : 1));
   }, [profile, preferQuiet]);
 
@@ -78,7 +190,9 @@ export default function Home() {
             Profil: <b>{LABEL[profile]}</b>
           </p>
         </div>
-        <a href="#" style={{ opacity: 0.8 }}>Uložené</a>
+        <a href="#" style={{ opacity: 0.8 }}>
+          Uložené
+        </a>
       </header>
 
       <section style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -91,6 +205,7 @@ export default function Home() {
               borderRadius: 999,
               border: "1px solid rgba(0,0,0,.18)",
               background: p === profile ? "rgba(0,0,0,.06)" : "transparent",
+              cursor: "pointer",
             }}
           >
             {LABEL[p]}
@@ -105,24 +220,61 @@ export default function Home() {
 
       <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
         {tips.map((t) => (
-          <article key={t.title} style={{ border: "1px solid rgba(0,0,0,.12)", borderRadius: 12, padding: 16 }}>
+          <article key={t.slug} style={{ border: "1px solid rgba(0,0,0,.12)", borderRadius: 12, padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <h2 style={{ fontSize: 18, margin: 0 }}>{t.title}</h2>
               <span style={{ opacity: 0.7 }}>{t.eta}</span>
             </div>
+
             <p style={{ marginTop: 8, marginBottom: 10, opacity: 0.9 }}>{t.desc}</p>
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {t.tags.map((tag) => (
-                <span key={tag} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 999, background: "rgba(0,0,0,.06)" }}>
+                <span
+                  key={tag}
+                  style={{ fontSize: 12, padding: "4px 10px", borderRadius: 999, background: "rgba(0,0,0,.06)" }}
+                >
                   {tag}
                 </span>
               ))}
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-              <button style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,0,0,.18)" }}>Detail</button>
-              <button style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,0,0,.18)" }}>Start</button>
-              <button style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,0,0,.18)" }}>Uložit</button>
+              <Link
+                href={`/place/${t.slug}`}
+                style={{
+                  display: "inline-block",
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(0,0,0,.18)",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                Detail
+              </Link>
+
+              <button
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(0,0,0,.18)",
+                  cursor: "pointer",
+                }}
+              >
+                Start
+              </button>
+
+              <button
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(0,0,0,.18)",
+                  cursor: "pointer",
+                }}
+              >
+                Uložit
+              </button>
             </div>
           </article>
         ))}
